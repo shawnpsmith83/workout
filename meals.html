@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meal Plan</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f5f5f5; padding:1rem; color:#333; }
+@media (prefers-color-scheme:dark){ body{ background:#1a1a1a; color:#f0f0f0; } }
+h1 { font-size:26px; font-weight:600; margin-bottom:0.5rem; text-align:center; }
+.subtitle { text-align:center; color:#888; font-size:13px; margin-bottom:1.5rem; }
+.day-selector { display:grid; grid-template-columns:repeat(4,1fr); gap:0.5rem; margin-bottom:1.5rem; }
+.day-btn { padding:0.75rem 0.25rem; border:2px solid #ddd; background:#fff; border-radius:8px; cursor:pointer; font-size:14px; font-weight:500; text-align:center; }
+@media (prefers-color-scheme:dark){ .day-btn{ background:#2a2a2a; border-color:#444; color:#f0f0f0; } }
+.day-btn.active { border-color:#333; background:#333; color:#fff; }
+@media (prefers-color-scheme:dark){ .day-btn.active{ border-color:#f0f0f0; background:#f0f0f0; color:#1a1a1a; } }
+.day-panel { display:none; }
+.day-panel.active { display:block; }
+.day-heading { font-size:20px; font-weight:600; margin-bottom:1rem; }
+.meal-card { background:#fff; border-radius:12px; padding:1.25rem; margin-bottom:1rem; border-left:4px solid #333; }
+@media (prefers-color-scheme:dark){ .meal-card{ background:#2a2a2a; border-left-color:#f0f0f0; } }
+.meal-name { font-size:12px; color:#888; text-transform:uppercase; letter-spacing:0.5px; font-weight:600; margin-bottom:0.5rem; }
+.meal-title { font-size:15px; font-weight:500; margin-bottom:0.6rem; }
+.meal-item { font-size:14px; line-height:1.7; color:#555; margin-left:0.25rem; }
+@media (prefers-color-scheme:dark){ .meal-item{ color:#bbb; } }
+.coffee-note { font-size:12px; color:#888; font-style:italic; margin-top:0.5rem; }
+</style>
+</head>
+<body>
+<h1>Meal Plan</h1>
+<div class="subtitle">~1,800 cal · 180g protein · same plan every week</div>
+
+<div class="day-selector">
+<button class="day-btn active" data-day="Mon" onclick="showDay('Mon')">Mon</button>
+<button class="day-btn" data-day="Tue" onclick="showDay('Tue')">Tue</button>
+<button class="day-btn" data-day="Wed" onclick="showDay('Wed')">Wed</button>
+<button class="day-btn" data-day="Thu" onclick="showDay('Thu')">Thu</button>
+<button class="day-btn" data-day="Fri" onclick="showDay('Fri')">Fri</button>
+<button class="day-btn" data-day="Sat" onclick="showDay('Sat')">Sat</button>
+<button class="day-btn" data-day="Sun" onclick="showDay('Sun')">Sun</button>
+</div>
+
+<div id="panels"></div>
+
+<script>
+var COFFEE = 'Black coffee + Splenda';
+
+var DAYS = {
+  Mon: { label:'Monday', meals:[
+    { name:'Breakfast', title:'Eggs + toast', items:['3 whole eggs','1 slice whole wheat toast', COFFEE] },
+    { name:'Snack', title:'Protein shake', items:['50g whey protein','1 banana','Water'] },
+    { name:'Lunch', title:'Template A — Chicken', items:['6 oz grilled chicken breast','1 cup cooked quinoa','1.5 cups steamed broccoli','1 bell pepper'] },
+    { name:'Snack', title:'Yogurt + fruit', items:['1 cup non-fat Greek yogurt','1 apple'] },
+    { name:'Dinner', title:'Template B — Ground beef', items:['6 oz lean ground beef (93%)','1 medium sweet potato','1.5 cups baby carrots','1 cucumber, sliced'] }
+  ]},
+  Tue: { label:'Tuesday', meals:[
+    { name:'Breakfast', title:'Eggs + oatmeal', items:['3 whole eggs','1 cup oatmeal','1 tbsp honey', COFFEE] },
+    { name:'Snack', title:'Yogurt + fruit', items:['1 cup non-fat Greek yogurt','1 apple'] },
+    { name:'Lunch', title:'Template C — Chicken', items:['6 oz grilled chicken breast','0.75 cup cooked quinoa','2 cups broccoli + bell pepper','1/4 avocado'] },
+    { name:'Snack', title:'Protein shake', items:['40g whey protein','1 banana','Water'] },
+    { name:'Dinner', title:'Template A — NY strip', items:['5 oz NY strip steak','1 cup cooked quinoa','1.5 cups steamed broccoli','1 bell pepper'] }
+  ]},
+  Wed: { label:'Wednesday', meals:[
+    { name:'Breakfast', title:'Eggs + toast', items:['3 whole eggs','1 slice whole wheat toast', COFFEE] },
+    { name:'Snack', title:'Protein shake', items:['50g whey protein','1 banana','Water'] },
+    { name:'Lunch', title:'Template A — Ground beef', items:['6 oz lean ground beef (93%)','1 cup cooked quinoa','1.5 cups steamed broccoli','1 bell pepper'] },
+    { name:'Snack', title:'Yogurt + fruit', items:['1 cup non-fat Greek yogurt','1 apple'] },
+    { name:'Dinner', title:'Template B — Chicken', items:['6 oz grilled chicken breast','1 medium sweet potato','1.5 cups baby carrots','1 cucumber, sliced'] }
+  ]},
+  Thu: { label:'Thursday (Rest day)', meals:[
+    { name:'Breakfast', title:'Eggs + toast', items:['3 whole eggs','1 slice whole wheat toast', COFFEE] },
+    { name:'Snack', title:'Yogurt + fruit', items:['1 cup non-fat Greek yogurt','1 apple'] },
+    { name:'Lunch', title:'Template C — Salmon', items:['6 oz baked salmon','0.75 cup cooked quinoa','2 cups broccoli + bell pepper','1/4 avocado'] },
+    { name:'Snack', title:'Protein shake', items:['40g whey protein','1 banana','Water'] },
+    { name:'Dinner', title:'Template C — Ground beef', items:['6 oz lean ground beef (93%)','0.75 cup cooked quinoa','2 cups broccoli + bell pepper','1/4 avocado'] }
+  ]},
+  Fri: { label:'Friday', meals:[
+    { name:'Breakfast', title:'Eggs + oatmeal', items:['3 whole eggs','1 cup oatmeal','1 tbsp honey', COFFEE] },
+    { name:'Snack', title:'Protein shake', items:['50g whey protein','1 banana','Water'] },
+    { name:'Lunch', title:'Template A — Salmon', items:['6 oz baked salmon','1 cup cooked quinoa','1.5 cups steamed broccoli','1 bell pepper'] },
+    { name:'Snack', title:'Yogurt + fruit', items:['1 cup non-fat Greek yogurt','1 apple'] },
+    { name:'Dinner', title:'Template B — Ground beef', items:['6 oz lean ground beef (93%)','1 medium sweet potato','1.5 cups baby carrots','1 cucumber, sliced'] }
+  ]},
+  Sat: { label:'Saturday', meals:[
+    { name:'Breakfast', title:'Eggs + toast', items:['3 whole eggs','1 slice whole wheat toast', COFFEE] },
+    { name:'Snack', title:'Yogurt + fruit', items:['1 cup non-fat Greek yogurt','1 apple'] },
+    { name:'Lunch', title:'Template B — NY strip', items:['5 oz NY strip steak','1 medium sweet potato','1.5 cups baby carrots','1 cucumber, sliced'] },
+    { name:'Snack', title:'Protein shake', items:['40g whey protein','1 banana','Water'] },
+    { name:'Dinner', title:'Template A — Chicken', items:['6 oz grilled chicken breast','1 cup cooked quinoa','1.5 cups steamed broccoli','1 bell pepper'] }
+  ]},
+  Sun: { label:'Sunday (Rest day)', meals:[
+    { name:'Breakfast', title:'Eggs + oatmeal', items:['3 whole eggs','1 cup oatmeal','1 tbsp honey', COFFEE] },
+    { name:'Snack', title:'Protein shake', items:['50g whey protein','1 banana','Water'] },
+    { name:'Lunch', title:'Template C — Chicken', items:['6 oz grilled chicken breast','0.75 cup cooked quinoa','2 cups broccoli + bell pepper','1/4 avocado'] },
+    { name:'Snack', title:'Yogurt + fruit', items:['1 cup non-fat Greek yogurt','1 apple'] },
+    { name:'Dinner', title:'Template B — Salmon', items:['6 oz baked salmon','1 medium sweet potato','1.5 cups baby carrots','1 cucumber, sliced'] }
+  ]}
+};
+
+var order = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function buildPanels(){
+  var container = document.getElementById('panels');
+  var html = '';
+  for (var d = 0; d < order.length; d++){
+    var key = order[d];
+    var day = DAYS[key];
+    html += '<div class="day-panel' + (d===0?' active':'') + '" data-day="' + key + '">';
+    html += '<div class="day-heading">' + day.label + '</div>';
+    for (var m = 0; m < day.meals.length; m++){
+      var meal = day.meals[m];
+      html += '<div class="meal-card">';
+      html += '<div class="meal-name">' + meal.name + '</div>';
+      html += '<div class="meal-title">' + meal.title + '</div>';
+      for (var i = 0; i < meal.items.length; i++){
+        html += '<div class="meal-item">• ' + meal.items[i] + '</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+function showDay(key){
+  var panels = document.querySelectorAll('.day-panel');
+  for (var i = 0; i < panels.length; i++){
+    panels[i].classList.toggle('active', panels[i].getAttribute('data-day') === key);
+  }
+  var btns = document.querySelectorAll('.day-btn');
+  for (var j = 0; j < btns.length; j++){
+    btns[j].classList.toggle('active', btns[j].getAttribute('data-day') === key);
+  }
+  window.scrollTo(0,0);
+}
+
+buildPanels();
+</script>
+</body>
+</html>
